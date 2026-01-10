@@ -326,7 +326,7 @@
             }
 
             // Collider for click - Reduced size to prevent accidental clicks
-            await piece.AddComponent(new BS.BoxCollider(true, new BS.Vector3(0, 0.5, 0), new BS.Vector3(0.3, 0.3, 0.3)));
+            await piece.AddComponent(new BS.BoxCollider(true, new BS.Vector3(0, 0.15, 0), new BS.Vector3(0.2, 0.15, 0.2)));
             await piece.SetLayer(5); // UI layer
 
             piece.On('click', () => {
