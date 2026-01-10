@@ -175,7 +175,13 @@
             const boardState = { fen: 'reset' };
             const stateKey = 'chess_game_' + config.instance;
             BS.BanterScene.GetInstance().SetPublicSpaceProps({ [stateKey]: JSON.stringify(boardState) });
-            // The space-state-changed listener will now handle the reset for all clients, including this one.
+
+            // Optimistically reset for the local user, as the `space-state-changed` event
+            // may not fire reliably for the originating client.
+            console.log("Optimistically resetting local board.");
+            window.chessGame.reset();
+            syncBoard();
+            clearSelection();
         });
     }
 
@@ -458,6 +464,12 @@
             const boardState = { fen: fen };
             const stateKey = 'chess_game_' + config.instance;
             BS.BanterScene.GetInstance().SetPublicSpaceProps({ [stateKey]: JSON.stringify(boardState) });
+
+            // Optimistically sync the board for the local player, as the space-state-changed
+            // event might not fire reliably for the client that initiated the change.
+            console.log("Optimistically syncing local board after move.");
+            syncBoard();
+
             // The syncBoard() call is implicit via the event listener now, but we can clear selection optimistically.
             clearSelection();
         } else {
@@ -499,7 +511,8 @@
         // Listen for space state changes
         scene.On("space-state-changed", (e) => {
             const changes = e.detail.changes;
-            if (changes && changes.includes(stateKey)) {
+            // The `changes` array contains objects, so we need to check the `property` of each one.
+            if (changes && changes.find(c => c.property === stateKey)) {
                 const spaceState = scene.spaceState;
                 const val = (spaceState.public && spaceState.public[stateKey]) || (spaceState.protected && spaceState.protected[stateKey]);
                 
