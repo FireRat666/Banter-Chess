@@ -13,7 +13,6 @@
         resetRotation: new BS.Vector3(0, 0, 0),
         resetScale: new BS.Vector3(1, 1, 1),
         instance: window.location.href.split('?')[0], // Default to current URL without query params to avoid mismatches
-        preset: 'starry',
         hideUI: false
     };
 
@@ -37,7 +36,6 @@
         const url = new URL(currentScript.src);
         const params = new URLSearchParams(url.search);
 
-        if (params.has('preset')) config.preset = params.get('preset');
         if (params.has('hideUI')) config.hideUI = params.get('hideUI') === 'true';
         if (params.has('instance')) config.instance = params.get('instance');
 
