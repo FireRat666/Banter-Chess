@@ -70,7 +70,6 @@
     class ChessGame {
         constructor() {
             this.chess = new Chess();
-            this.onMoveCallback = null;
             this.onGameOverCallback = null;
         }
         reset() { this.chess.reset(); }
@@ -87,7 +86,6 @@
             try {
                 const result = this.chess.move(move);
                 if (result) {
-                    if (this.onMoveCallback) this.onMoveCallback(result);
                     // this.checkGameOver(); // Optional for demo
                     return true;
                 }
@@ -173,14 +171,11 @@
 
         // Logic
         btn.On('click', () => {
-            console.log("Resetting game...");
+            console.log("Requesting game reset...");
             const boardState = { fen: 'reset' };
             const stateKey = 'chess_game_' + config.instance;
             BS.BanterScene.GetInstance().SetPublicSpaceProps({ [stateKey]: JSON.stringify(boardState) });
-            // The listener will pick this up, but we can also reset optimistically
-            window.chessGame.reset();
-            syncBoard();
-            clearSelection();
+            // The space-state-changed listener will now handle the reset for all clients, including this one.
         });
     }
 
@@ -542,12 +537,7 @@
             }
         }
         
-        // Hook local move to sync board
-        const oldMove = window.chessGame.onMoveCallback;
-        window.chessGame.onMoveCallback = (move) => {
-            if (oldMove) oldMove(move);
-            syncBoard();
-        };
+        // The board is now synced only through space state changes.
     }
 
     // --- Scene Logic ---
