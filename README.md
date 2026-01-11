@@ -68,6 +68,8 @@ To have multiple, independent chess games in the same space, add a unique `insta
 - `boardPosition`: The `x y z` position of the board in the world. (Default: `0 1.1 -2`)
 - `boardRotation`: The `x y z` rotation of the board in degrees. (Default: `0 0 0`)
 - `boardScale`: A uniform scale `s` or per-axis `x y z` scale. (Default: `1`)
+- `lighting`: Set to `lit` to use physically-based lit materials that respond to scene lights. (Default: `unlit`)
+- `addLights`: When `lighting=lit`, this controls whether a default directional light is added. Set to `false` if you have your own lights. (Default: `true`)
 - `hideUI`: Set to `true` to hide the Reset button. (Default: `false`)
 - `resetPosition`: The `x y z` position of the reset button relative to the board. (Default: `0 0 2.5`)
 - `resetRotation`: The `x y z` rotation of the reset button. (Default: `0 0 0`)

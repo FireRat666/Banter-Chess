@@ -13,7 +13,9 @@
         resetRotation: new BS.Vector3(0, 0, 0),
         resetScale: new BS.Vector3(1, 1, 1),
         instance: window.location.href.split('?')[0], // Default to current URL without query params to avoid mismatches
-        hideUI: false
+        hideUI: false,
+        lighting: 'unlit',
+        addLights: true
     };
 
     // Helper to parse Vector3 from string
@@ -38,6 +40,8 @@
 
         if (params.has('hideUI')) config.hideUI = params.get('hideUI') === 'true';
         if (params.has('instance')) config.instance = params.get('instance');
+        if (params.has('lighting')) config.lighting = params.get('lighting');
+        if (params.has('addLights')) config.addLights = params.get('addLights') !== 'false';
 
         config.boardScale = parseVector3(params.get('boardScale'), config.boardScale);
         config.boardPosition = parseVector3(params.get('boardPosition'), config.boardPosition);
@@ -131,6 +135,18 @@
         rootTrans.position = config.boardPosition;
         rootTrans.localEulerAngles = config.boardRotation; // Apply Rotation
         rootTrans.localScale = config.boardScale;         // Apply Scale
+
+        // Add lights if we are using a lit shader and the user has not disabled them.
+        if (config.lighting === 'lit' && config.addLights) {
+            const lightGO = await new BS.GameObject("BanterChess_DirectionalLight");
+            await lightGO.SetParent(state.boardRoot, false);
+            let lightTrans = await lightGO.AddComponent(new BS.Transform());
+            lightTrans.localPosition = new BS.Vector3(0, 5, -5); // Above and behind the board from white's perspective
+            lightTrans.localEulerAngles = new BS.Vector3(45, 0, 0); // Angled down
+
+            // Add a directional light. BS.LightType.Directional is 1.
+            await lightGO.AddComponent(new BS.Light(1, new BS.Vector4(1, 1, 1, 1), 1, 0.1));
+        }
 
         console.log("Board Initialized with Config:", config);
 
@@ -321,6 +337,15 @@
 
             try {
                 await piece.AddComponent(new BS.BanterGLTF(url, false, false, false, false, false, false));
+
+                // If using lit lighting, add a standard material to override the GLTF's unlit one.
+                if (config.lighting === 'lit') {
+                    const colorHex = isWhite ? COLORS.whitePiece : COLORS.blackPiece;
+                    const colorVec4 = hexToVector4(colorHex);
+                    // This is a speculative change. It assumes adding a new BanterMaterial will
+                    // override the material of the loaded GLTF. The "Standard" shader is also a guess.
+                    await piece.AddComponent(new BS.BanterMaterial("Standard", "", colorVec4, BS.MaterialSide.Front, false));
+                }
             } catch (glbErr) {
                 console.error(`Failed to load GLTF for ${char}:`, glbErr);
             }
