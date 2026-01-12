@@ -224,7 +224,12 @@
         await obj.AddComponent(new BS.BanterGeometry(...geoArgs));
 
         const color = hexToVector4(colorHex);
-        await obj.AddComponent(new BS.BanterMaterial("Unlit/Diffuse", "", color, BS.MaterialSide.Front, false));
+
+        const isTile = name.startsWith("Tile_");
+        const shader = (config.hideBoard && isTile) ? 'Unlit/DiffuseTransparent' : 'Unlit/Diffuse';
+        const texture = (config.hideBoard && isTile) ? null : "";
+
+        await obj.AddComponent(new BS.BanterMaterial(shader, texture, color, BS.MaterialSide.Front, false));
 
         let colSize;
         if (geometryType === BS.GeometryType.BoxGeometry) {
@@ -376,7 +381,7 @@
                     const isTransparent = config.piecesOpacity < 1.0;
                     // Use the transparent shader and texture if opacity is less than 1
                     const shader = isTransparent ? 'Unlit/DiffuseTransparent' : 'Unlit/Diffuse';
-                    const texture = isTransparent ? 'https://banter-chess.firer.at/images/Transparent.png' : '';
+                    const texture = isTransparent ? null : '';
                     
                     await model.AddComponent(new BS.BanterMaterial(shader, texture, colorVec4, BS.MaterialSide.Front, false));
                 }
