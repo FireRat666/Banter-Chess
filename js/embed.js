@@ -325,10 +325,18 @@
             let transform = piece.GetComponent(BS.ComponentType.Transform);
             if (!transform) transform = await piece.AddComponent(new BS.Transform());
 
-            // USE HELPER for position
+            // USE HELPER for position - a piece's position is its square
             transform.localPosition = getPiecePos(squareId, char);
-            transform.localEulerAngles = new BS.Vector3(0, isWhite ? 180 : 0, 0);
             transform.localScale = new BS.Vector3(1, 1, 1);
+
+            // The piece's root object should not be rotated.
+            // Create a child "model" object to contain the GLTF and its rotation.
+            const model = await new BS.GameObject(`Model_${type}`).Async();
+            await model.SetParent(piece, false);
+
+            let modelTransform = await model.AddComponent(new BS.Transform());
+            modelTransform.localEulerAngles = new BS.Vector3(0, isWhite ? 180 : 0, 0);
+            modelTransform.localScale = new BS.Vector3(1, 1, 1);
 
             // CHANGED: Use subfolders for White/Black models
             const folder = isWhite ? 'White' : 'Black';
@@ -336,7 +344,8 @@
             console.log(`Loading GLB from: ${url}`);
 
             try {
-                await piece.AddComponent(new BS.BanterGLTF(url, false, false, false, false, false, false));
+                // Attach GLTF to the model sub-object
+                await model.AddComponent(new BS.BanterGLTF(url, false, false, false, false, false, false));
 
                 // If using lit lighting, add a standard material to override the GLTF's unlit one.
                 if (config.lighting === 'lit') {
@@ -344,13 +353,13 @@
                     const colorVec4 = hexToVector4(colorHex);
                     // This is a speculative change. It assumes adding a new BanterMaterial will
                     // override the material of the loaded GLTF. The "Standard" shader is also a guess.
-                    await piece.AddComponent(new BS.BanterMaterial("Standard", "", colorVec4, BS.MaterialSide.Front, false));
+                    await model.AddComponent(new BS.BanterMaterial("Standard", "", colorVec4, BS.MaterialSide.Front, false));
                 }
             } catch (glbErr) {
                 console.error(`Failed to load GLTF for ${char}:`, glbErr);
             }
 
-            // Collider for click - Reduced size to prevent accidental clicks
+            // Collider for click - Stays on the main piece object for correct click handling
             await piece.AddComponent(new BS.BoxCollider(true, new BS.Vector3(0, 0.15, 0), new BS.Vector3(0.2, 0.15, 0.2)));
             await piece.SetLayer(5); // UI layer
 
