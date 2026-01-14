@@ -229,7 +229,9 @@
         const shader = (config.hideBoard && isTile) ? 'Unlit/DiffuseTransparent' : 'Unlit/Diffuse';
         const texture = (config.hideBoard && isTile) ? null : "";
 
-        await obj.AddComponent(new BS.BanterMaterial(shader, texture, color, BS.MaterialSide.Front, false));
+        // Tiles need unique material instances for dynamic color highlighting
+        const cacheBust = isTile ? name : "";
+        await obj.AddComponent(new BS.BanterMaterial(shader, texture, color, BS.MaterialSide.Front, false, cacheBust));
 
         let colSize;
         if (geometryType === BS.GeometryType.BoxGeometry) {
