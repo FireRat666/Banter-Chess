@@ -189,7 +189,8 @@
         await btn.AddComponent(new BS.BanterGeometry(...geoArgs));
 
         const redColor = new BS.Vector4(0.8, 0.2, 0.2, 1);
-        await btn.AddComponent(new BS.BanterMaterial("Unlit/Diffuse", "", redColor, BS.MaterialSide.Front, false));
+        const buttonShader = config.lighting === 'lit' ? 'Standard' : 'Unlit/Diffuse';
+        await btn.AddComponent(new BS.BanterMaterial(buttonShader, "", redColor, BS.MaterialSide.Front, false));
 
         // Collider for click
         await btn.AddComponent(new BS.BoxCollider(true, new BS.Vector3(0, 0, 0), new BS.Vector3(w, h, d)));
@@ -226,8 +227,18 @@
         const color = hexToVector4(colorHex);
 
         const isTile = name.startsWith("Tile_");
-        const shader = (config.hideBoard && isTile) ? 'Unlit/DiffuseTransparent' : 'Unlit/Diffuse';
-        const texture = (config.hideBoard && isTile) ? null : "";
+        
+        let shader;
+        let texture;
+
+        if (config.lighting === 'lit') {
+            shader = 'Standard';
+            texture = ""; // Lit shader for pieces uses empty string for texture
+        } else {
+            // Original unlit logic
+            shader = (config.hideBoard && isTile) ? 'Unlit/DiffuseTransparent' : 'Unlit/Diffuse';
+            texture = (config.hideBoard && isTile) ? null : "";
+        }
 
         // Tiles need unique material instances for dynamic color highlighting
         const cacheBust = isTile ? name : "";
