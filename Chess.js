@@ -231,11 +231,11 @@
         let shader;
         let texture;
 
-        if (config.lighting === 'lit') {
+        if (config.lighting === 'lit' && !(config.hideBoard && isTile)) {
             shader = 'Standard';
-            texture = ""; // Lit shader for pieces uses empty string for texture
+            texture = "";
         } else {
-            // Original unlit logic
+            // Original unlit logic, or when board is hidden to ensure transparency
             shader = (config.hideBoard && isTile) ? 'Unlit/DiffuseTransparent' : 'Unlit/Diffuse';
             texture = (config.hideBoard && isTile) ? null : "";
         }
