@@ -63,12 +63,47 @@
     }
 
     // --- Dependency Loading ---
-    const loadScript = (src) => {
+    const loadScript = (src, globalName) => {
         return new Promise((resolve, reject) => {
-            if (document.querySelector(`script[src="${src}"]`)) return resolve();
+            // Case 1: Global is already available.
+            if (globalName && window[globalName]) {
+                return resolve();
+            }
+
+            // Case 2: Script tag exists but global is missing (Race condition or loading).
+            if (document.querySelector(`script[src="${src}"]`)) {
+                if (!globalName) return resolve(); // No global to check, assume fine.
+
+                // Poll for the global to become available
+                const maxAttempts = 50; // 5 seconds (100ms * 50)
+                let attempts = 0;
+                const interval = setInterval(() => {
+                    attempts++;
+                    if (window[globalName]) {
+                        clearInterval(interval);
+                        resolve();
+                    } else if (attempts >= maxAttempts) {
+                        clearInterval(interval);
+                        reject(new Error(`Timeout waiting for global ${globalName} from ${src}`));
+                    }
+                }, 100);
+                return;
+            }
+
+            // Case 3: Script tag does not exist. Load it.
             const s = document.createElement('script');
             s.src = src;
-            s.onload = resolve;
+            s.onload = () => {
+                // If we need a global, ensure it's there (rarely needs delay after onload for standard scripts)
+                if (globalName && !window[globalName]) {
+                    // Fallback polling just in case
+                    const interval = setInterval(() => {
+                         if (window[globalName]) { clearInterval(interval); resolve(); }
+                    }, 50);
+                } else {
+                    resolve();
+                }
+            };
             s.onerror = reject;
             document.head.appendChild(s);
         });
@@ -76,7 +111,8 @@
 
     const loadDependencies = async () => {
         const deps = [];
-        if (typeof Chess === 'undefined') deps.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js')); // Using CDN for Embed
+        // We pass 'Chess' as the global variable name to wait for.
+        deps.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js', 'Chess'));
         await Promise.all(deps);
     };
 
