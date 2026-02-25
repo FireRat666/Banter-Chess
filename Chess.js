@@ -1,4 +1,5 @@
 (function () {
+window.addEventListener("unity-loaded", async () => {
     /**
      * BanterChess Unified Embed Script
      * Loads dependencies, initializes game logic, and renders the board in Banter.
@@ -689,29 +690,7 @@
         });
     }
 
+init();
 
-async function checkForBS() {
-  if (window.BS) {
-    // BS is loaded, so we can now execute the script
-    console.log(`Chess Script BS is loaded, so we can now execute the script`);
-    init();
-  } else {
-        await loadDependencies();
-        // BS not loaded yet, wait for it
-        console.log(`Chess Script BS not loaded yet, wait for it`);
-        window.addEventListener("unity-loaded", async () => {
-            // Initialize Game
-            if (!window.chessGame) {
-                window.chessGame = new ChessGame();
-            }
-            // Note: Floor creation removed as per user request. 
-            // Host spaces should provide their own ground/environment.
-            await initializeBoard();
-        })
-    }
-    console.log(`Chess Script Checked for BS`);
-}
-
-checkForBS();
-
+})
 })();
