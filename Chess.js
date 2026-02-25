@@ -678,25 +678,40 @@
     // --- Main Initializer ---
     async function init() {
         await loadDependencies();
-
-        if (window.BS) {
-            BS.BanterScene.GetInstance().On("unity-loaded", async () => {
-            
-                console.log("Banter Unity Loaded. Initializing scene...");
-
-                // Initialize Game
-                if (!window.chessGame) {
-                    window.chessGame = new ChessGame();
-                }
-                // Note: Floor creation removed as per user request. 
-                // Host spaces should provide their own ground/environment.
-                await initializeBoard();
-            });
-        } else {
-            console.error("Banter SDK (BS) not found.");
-        }
+        BS.BanterScene.GetInstance().On("unity-loaded", async () => {
+            // Initialize Game
+            if (!window.chessGame) {
+                window.chessGame = new ChessGame();
+            }
+            // Note: Floor creation removed as per user request. 
+            // Host spaces should provide their own ground/environment.
+            await initializeBoard();
+        });
     }
 
+
+async function checkForBS() {
+  if (window.BS) {
+    // BS is loaded, so we can now execute the script
+    console.log(`FireScreen Script BS is loaded, so we can now execute the script`);
     init();
+  } else {
+        await loadDependencies();
+        // BS not loaded yet, wait for it
+        console.log(`FireScreen Script BS not loaded yet, wait for it`);
+        window.addEventListener("unity-loaded", async () => {
+            // Initialize Game
+            if (!window.chessGame) {
+                window.chessGame = new ChessGame();
+            }
+            // Note: Floor creation removed as per user request. 
+            // Host spaces should provide their own ground/environment.
+            await initializeBoard();
+        })
+    }
+    console.log(`FireScreen Script Checked for BS`);
+}
+
+checkForBS();
 
 })();
