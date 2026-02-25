@@ -693,12 +693,12 @@
 async function checkForBS() {
   if (window.BS) {
     // BS is loaded, so we can now execute the script
-    console.log(`FireScreen Script BS is loaded, so we can now execute the script`);
+    console.log(`Chess Script BS is loaded, so we can now execute the script`);
     init();
   } else {
         await loadDependencies();
         // BS not loaded yet, wait for it
-        console.log(`FireScreen Script BS not loaded yet, wait for it`);
+        console.log(`Chess Script BS not loaded yet, wait for it`);
         window.addEventListener("unity-loaded", async () => {
             // Initialize Game
             if (!window.chessGame) {
@@ -709,7 +709,7 @@ async function checkForBS() {
             await initializeBoard();
         })
     }
-    console.log(`FireScreen Script Checked for BS`);
+    console.log(`Chess Script Checked for BS`);
 }
 
 checkForBS();
