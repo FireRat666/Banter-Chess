@@ -1,4 +1,3 @@
-window.addEventListener("unity-loaded", async () => {
 (function () {
     /**
      * BanterChess Unified Embed Script
@@ -35,8 +34,10 @@ window.addEventListener("unity-loaded", async () => {
         return defaultVal;
     };
 
-    // Parse URL params from this script tag
+    // Parse URL params from this script tag immediately
     const currentScript = document.currentScript;
+    const scriptSrc = currentScript ? currentScript.src : null;
+
     if (currentScript) {
         const url = new URL(currentScript.src);
         const params = new URLSearchParams(url.search);
@@ -174,30 +175,6 @@ window.addEventListener("unity-loaded", async () => {
 
     async function initializeBoard() {
         console.log("Chess: Setup Started");
-
-        // Convert config array values to BS.Vector3 now that BS is available
-        config.boardPosition = new BS.Vector3(...config.boardPosition);
-        config.boardRotation = new BS.Vector3(...config.boardRotation);
-        config.boardScale = new BS.Vector3(...config.boardScale);
-        config.resetPosition = new BS.Vector3(...config.resetPosition);
-        config.resetRotation = new BS.Vector3(...config.resetRotation);
-        config.resetScale = new BS.Vector3(...config.resetScale);
-
-        // Re-parse URL params to ensure BS.Vector3 conversion for any overridden values
-        // This is necessary because parseVector3 now returns arrays, and we need BS.Vector3 objects
-        const currentScript = document.currentScript;
-        if (currentScript) {
-            const url = new URL(currentScript.src);
-            const params = new URLSearchParams(url.search);
-
-            if (params.has('boardScale')) config.boardScale = new BS.Vector3(...parseVector3(params.get('boardScale'), [1,1,1]));
-            if (params.has('boardPosition')) config.boardPosition = new BS.Vector3(...parseVector3(params.get('boardPosition'), [0,1.1,0]));
-            if (params.has('boardRotation')) config.boardRotation = new BS.Vector3(...parseVector3(params.get('boardRotation'), [0,0,0]));
-
-            if (params.has('resetScale')) config.resetScale = new BS.Vector3(...parseVector3(params.get('resetScale'), [1,1,1]));
-            if (params.has('resetPosition')) config.resetPosition = new BS.Vector3(...parseVector3(params.get('resetPosition'), [0,-0.4,0]));
-            if (params.has('resetRotation')) config.resetRotation = new BS.Vector3(...parseVector3(params.get('resetRotation'), [0,0,0]));
-        }
 
         state.boardRoot = await new BS.GameObject("ChessBoardRoot");
 
@@ -394,9 +371,9 @@ window.addEventListener("unity-loaded", async () => {
     function getModelUrl(modelName) {
         try {
             // Use the captured 'currentScript' variable from the top of the IIFE
-            if (currentScript) {
+            if (scriptSrc) {
                 // /Chess.js -> /models/Name.glb
-                return new URL(`/models/${modelName}`, currentScript.src).href;
+                return new URL(`/models/${modelName}`, scriptSrc).href;
             }
         } catch (e) { console.error("Error resolving model URL:", e); }
         // Fallback if script tag parsing failed
@@ -702,20 +679,38 @@ window.addEventListener("unity-loaded", async () => {
         // The board is now synced only through space state changes.
     }
 
-    // --- Scene Logic ---
     // --- Main Initializer ---
-    async function init() {
+    let initialized = false;
+    const initGame = async () => {
+        if (initialized) return;
+        initialized = true;
+        console.log("Chess: Initializing Game...");
+
         await loadDependencies();
         // Initialize Game
         if (!window.chessGame) {
             window.chessGame = new ChessGame();
         }
+
+        // Convert config arrays to BS.Vector3 now that BS is available
+        config.boardPosition = new BS.Vector3(...config.boardPosition);
+        config.boardRotation = new BS.Vector3(...config.boardRotation);
+        config.boardScale = new BS.Vector3(...config.boardScale);
+        config.resetPosition = new BS.Vector3(...config.resetPosition);
+        config.resetRotation = new BS.Vector3(...config.resetRotation);
+        config.resetScale = new BS.Vector3(...config.resetScale);
+
         // Note: Floor creation removed as per user request. 
         // Host spaces should provide their own ground/environment.
         await initializeBoard();
+    };
+
+    // --- Check for BS availability ---
+    if (window.BS) {
+        initGame();
+    } else {
+        window.addEventListener("unity-loaded", initGame);
+        window.addEventListener("bs-loaded", initGame);
     }
 
-init();
-
 })();
-})
