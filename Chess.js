@@ -1,5 +1,5 @@
-(function () {
 window.addEventListener("unity-loaded", async () => {
+(function () {
     /**
      * BanterChess Unified Embed Script
      * Loads dependencies, initializes game logic, and renders the board in Banter.
@@ -692,5 +692,5 @@ window.addEventListener("unity-loaded", async () => {
 
 init();
 
-})
 })();
+})
