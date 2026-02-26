@@ -7,12 +7,12 @@ window.addEventListener("unity-loaded", async () => {
 
     // --- Configuration ---
     const config = {
-        boardPosition: new BS.Vector3(0, 1.1, -2),
-        boardRotation: new BS.Vector3(0, 0, 0),
-        boardScale: new BS.Vector3(1, 1, 1),
-        resetPosition: new BS.Vector3(0, 0, 2.5),
-        resetRotation: new BS.Vector3(0, 0, 0),
-        resetScale: new BS.Vector3(1, 1, 1),
+        boardPosition: [0, 1.1, -2],
+        boardRotation: [0, 0, 0],
+        boardScale: [1, 1, 1],
+        resetPosition: [0, 0, 2.5],
+        resetRotation: [0, 0, 0],
+        resetScale: [1, 1, 1],
         instance: window.location.href.split('?')[0], // Default to current URL without query params to avoid mismatches
         hideUI: false,
         hideBoard: false,
@@ -21,16 +21,16 @@ window.addEventListener("unity-loaded", async () => {
         addLights: true
     };
 
-    // Helper to parse Vector3 from string
+    // Helper to parse Vector3 from string - now returns array [x,y,z]
     const parseVector3 = (str, defaultVal) => {
         if (!str) return defaultVal;
         const s = str.trim();
         if (s.includes(' ')) {
             const parts = s.split(' ').map(Number);
-            if (parts.length === 3) return new BS.Vector3(parts[0], parts[1], parts[2]);
+            if (parts.length === 3) return [parts[0], parts[1], parts[2]];
         } else {
             const val = parseFloat(s);
-            if (!isNaN(val)) return new BS.Vector3(val, val, val);
+            if (!isNaN(val)) return [val, val, val];
         }
         return defaultVal;
     };
@@ -54,6 +54,7 @@ window.addEventListener("unity-loaded", async () => {
             }
         }
 
+        // Store as arrays for now
         config.boardScale = parseVector3(params.get('boardScale'), config.boardScale);
         config.boardPosition = parseVector3(params.get('boardPosition'), config.boardPosition);
         config.boardRotation = parseVector3(params.get('boardRotation'), config.boardRotation);
@@ -172,6 +173,32 @@ window.addEventListener("unity-loaded", async () => {
     state.offset = (state.boardSize * state.tileSize) / 2 - (state.tileSize / 2);
 
     async function initializeBoard() {
+        console.log("Chess: Setup Started");
+
+        // Convert config array values to BS.Vector3 now that BS is available
+        config.boardPosition = new BS.Vector3(...config.boardPosition);
+        config.boardRotation = new BS.Vector3(...config.boardRotation);
+        config.boardScale = new BS.Vector3(...config.boardScale);
+        config.resetPosition = new BS.Vector3(...config.resetPosition);
+        config.resetRotation = new BS.Vector3(...config.resetRotation);
+        config.resetScale = new BS.Vector3(...config.resetScale);
+
+        // Re-parse URL params to ensure BS.Vector3 conversion for any overridden values
+        // This is necessary because parseVector3 now returns arrays, and we need BS.Vector3 objects
+        const currentScript = document.currentScript;
+        if (currentScript) {
+            const url = new URL(currentScript.src);
+            const params = new URLSearchParams(url.search);
+
+            if (params.has('boardScale')) config.boardScale = new BS.Vector3(...parseVector3(params.get('boardScale'), [1,1,1]));
+            if (params.has('boardPosition')) config.boardPosition = new BS.Vector3(...parseVector3(params.get('boardPosition'), [0,1.1,0]));
+            if (params.has('boardRotation')) config.boardRotation = new BS.Vector3(...parseVector3(params.get('boardRotation'), [0,0,0]));
+
+            if (params.has('resetScale')) config.resetScale = new BS.Vector3(...parseVector3(params.get('resetScale'), [1,1,1]));
+            if (params.has('resetPosition')) config.resetPosition = new BS.Vector3(...parseVector3(params.get('resetPosition'), [0,-0.4,0]));
+            if (params.has('resetRotation')) config.resetRotation = new BS.Vector3(...parseVector3(params.get('resetRotation'), [0,0,0]));
+        }
+
         state.boardRoot = await new BS.GameObject("ChessBoardRoot");
 
         // Transform
