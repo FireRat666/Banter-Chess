@@ -679,15 +679,13 @@ window.addEventListener("unity-loaded", async () => {
     // --- Main Initializer ---
     async function init() {
         await loadDependencies();
-        BS.BanterScene.GetInstance().On("unity-loaded", async () => {
-            // Initialize Game
-            if (!window.chessGame) {
-                window.chessGame = new ChessGame();
-            }
-            // Note: Floor creation removed as per user request. 
-            // Host spaces should provide their own ground/environment.
-            await initializeBoard();
-        });
+        // Initialize Game
+        if (!window.chessGame) {
+            window.chessGame = new ChessGame();
+        }
+        // Note: Floor creation removed as per user request. 
+        // Host spaces should provide their own ground/environment.
+        await initializeBoard();
     }
 
 init();
