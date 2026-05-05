@@ -115,7 +115,7 @@
     const loadDependencies = async () => {
         const deps = [];
         // We pass 'Chess' as the global variable name to wait for.
-        deps.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.10.3/chess.min.js', 'Chess'));
+        deps.push(loadScript('https://cdnjs.cloudflare.com/ajax/libs/chess.js/0.13.4/chess.min.js', 'Chess'));
         await Promise.all(deps);
     };
 
